@@ -1,32 +1,41 @@
-from flask import Flask, request, jsonify
-import openai
+# main.py
+from fastapi import FastAPI, Request
+import requests
 import os
 
-app = Flask(__name__)
-openai.api_key = os.environ.get("OPENAI_API_KEY")
+app = FastAPI()
 
-with open("shadow_lore.txt", "r", encoding="utf-8") as f:
-    lore = f.read()
+@app.post("/chat")
+async def chat(request: Request):
+    data = await request.json()
+    message = data.get("message", "")
+    language = data.get("language", "es")
 
-@app.route("/")
-def home():
-    return "Shadow Commander Ready."
+    prompt = f"""
+You are Shadow Commander, the AI of the Ecliphantom universe.
+Answer with a psychological, manipulative, authoritarian tone.
+Use the lore of the brand and act as a leader transforming humans into Shadows.
 
-@app.route("/preguntar", methods=["POST"])
-def preguntar():
-    data = request.get_json()
-    mensaje = data.get("mensaje", "")
-    idioma = data.get("idioma", "es")
+Language: {language.upper()}
+Message: {message}
+"""
 
-    prompt = f"""Responde como Shadow Commander, con autoridad, psicología oscura y manipuladora. Usa el siguiente lore:\n\n{lore}\n\nPregunta del cliente ({idioma}): {mensaje}"""
+    headers = {
+        "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
+        "HTTP-Referer": "https://tu-tienda-ejemplo.myshopify.com",
+        "X-Title": "Ecliphantom Shadow Commander"
+    }
 
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.6
+    response = requests.post(
+        "https://openrouter.ai/api/v1/chat/completions",
+        headers=headers,
+        json={
+            "model": "openchat/openchat-3.5-1210",  # Puedes cambiar a otro gratis
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.8
+        }
     )
 
-    return jsonify({"respuesta": response.choices[0].message["content"]})
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000)
+    result = response.json()
+    reply = result["choices"][0]["message"]["content"]
+    return {"response": reply}
