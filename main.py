@@ -22,7 +22,7 @@ Message: {message}
 
     headers = {
         "Authorization": f"Bearer {os.getenv('OPENROUTER_API_KEY')}",
-        "HTTP-Referer": "https://ecliphantom.myshopify.com",
+        "HTTP-Referer": "https://ecliphantom.com",
         "X-Title": "Ecliphantom Shadow Commander"
     }
 
